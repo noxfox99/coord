@@ -25,24 +25,16 @@ function ImageParserApp() {
     ).then(({ data: { text } }) => {
       console.log('OCR Result:', text);
 
-      // Enhanced regex to capture more number formats, including coordinates
-      const regex = /(-?\d{1,3}(?:[.,]\d+)?)[\s,;]+(-?\d{1,3}(?:[.,]\d+)?)/g;
+      // Updated regex to capture large integer pairs typical of coordinates
+      const regex = /\b(\d{5,8})[\s,;]+(\d{5,8})\b/g;
       const matches = Array.from(text.matchAll(regex));
 
       let lat = '', lon = '';
-      for (const match of matches) {
-        const num1 = parseFloat(match[1].replace(',', '.'));
-        const num2 = parseFloat(match[2].replace(',', '.'));
-
-        // Check plausible latitude and longitude ranges
-        if ((Math.abs(num1) <= 90 && Math.abs(num2) <= 180) || (Math.abs(num2) <= 90 && Math.abs(num1) <= 180)) {
-          lat = Math.abs(num1) <= 90 ? num1.toString() : num2.toString();
-          lon = Math.abs(num2) <= 180 ? num2.toString() : num1.toString();
-          break;
-        }
-      }
-
-      if (lat && lon) {
+      if (matches.length > 0) {
+        const num1 = matches[0][1];
+        const num2 = matches[0][2];
+        lat = num1;
+        lon = num2;
         setCoordinates({ lat, lon });
       } else {
         alert('Coordinates not found');
