@@ -24,23 +24,20 @@ function ImageParserApp() {
       { logger: (m) => console.log(m) }
     ).then(({ data: { text } }) => {
       console.log('OCR Result:', text);
-      // Flexible regex to capture various coordinate formats, even with noise
-      const regex = /([0-9]{2,3}[.,]?[0-9]{4,})(?:[\s,;]+)?([0-9]{2,3}[.,]?[0-9]{4,})/g;
+
+      // Enhanced regex to capture more number formats, including coordinates
+      const regex = /(-?\d{1,3}(?:[.,]\d+)?)[\s,;]+(-?\d{1,3}(?:[.,]\d+)?)/g;
       const matches = Array.from(text.matchAll(regex));
 
       let lat = '', lon = '';
       for (const match of matches) {
-        const num1 = match[1].replace(',', '.');
-        const num2 = match[2].replace(',', '.');
-        // Ensure the numbers make sense as coordinates
-        if (parseFloat(num1) <= 90 && parseFloat(num2) <= 180) {
-          lat = num1;
-          lon = num2;
-          break;
-        }
-        if (parseFloat(num2) <= 90 && parseFloat(num1) <= 180) {
-          lat = num2;
-          lon = num1;
+        const num1 = parseFloat(match[1].replace(',', '.'));
+        const num2 = parseFloat(match[2].replace(',', '.'));
+
+        // Check plausible latitude and longitude ranges
+        if ((Math.abs(num1) <= 90 && Math.abs(num2) <= 180) || (Math.abs(num2) <= 90 && Math.abs(num1) <= 180)) {
+          lat = Math.abs(num1) <= 90 ? num1.toString() : num2.toString();
+          lon = Math.abs(num2) <= 180 ? num2.toString() : num1.toString();
           break;
         }
       }
