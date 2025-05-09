@@ -24,12 +24,29 @@ function ImageParserApp() {
       { logger: (m) => console.log(m) }
     ).then(({ data: { text } }) => {
       console.log('OCR Result:', text);
-      // Improved regex to capture latitude and longitude pairs from noisy text
-      const regex = /([0-9]{2,3}[.,][0-9]{4,})[\s,;]*([0-9]{2,3}[.,][0-9]{4,})/g;
+      // Flexible regex to capture various coordinate formats, even with noise
+      const regex = /([0-9]{2,3}[.,]?[0-9]{4,})(?:[\s,;]+)?([0-9]{2,3}[.,]?[0-9]{4,})/g;
       const matches = Array.from(text.matchAll(regex));
-      if (matches.length > 0) {
-        const [lat, lon] = matches[0].slice(1, 3);
-        setCoordinates({ lat: lat.replace(',', '.'), lon: lon.replace(',', '.') });
+
+      let lat = '', lon = '';
+      for (const match of matches) {
+        const num1 = match[1].replace(',', '.');
+        const num2 = match[2].replace(',', '.');
+        // Ensure the numbers make sense as coordinates
+        if (parseFloat(num1) <= 90 && parseFloat(num2) <= 180) {
+          lat = num1;
+          lon = num2;
+          break;
+        }
+        if (parseFloat(num2) <= 90 && parseFloat(num1) <= 180) {
+          lat = num2;
+          lon = num1;
+          break;
+        }
+      }
+
+      if (lat && lon) {
+        setCoordinates({ lat, lon });
       } else {
         alert('Coordinates not found');
       }
