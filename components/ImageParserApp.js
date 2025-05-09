@@ -15,21 +15,29 @@ function ImageParserApp() {
     }
   };
 
+  const cleanOCRText = (text) => {
+    return text.replace(/[\n\r]+/g, ' ').replace(/[^\d.,A-Za-zА-Яа-я\s/()]+/g, '').trim();
+  };
+
   const parseCoordinates = () => {
     if (!image) return;
     setProcessing(true);
     Tesseract.recognize(
       image,
-      'eng',
+      'rus+eng',
       { logger: (m) => console.log(m) }
     ).then(({ data: { text } }) => {
-      console.log('OCR Result:', text);
+      console.log('Raw OCR Result:', text);
+
+      // Clean the OCR text to reduce noise
+      const cleanedText = cleanOCRText(text);
+      console.log('Cleaned OCR Result:', cleanedText);
 
       const coordRegex = /(-?\d{1,3}[.,]\d+)[\s,;]+(-?\d{1,3}[.,]\d+)[^\d]*(\d+\s*m)/;
-      const addressRegex = /[А-Яа-яA-Za-z\s.,/]+\d+\/?\d*,\s*[А-Яа-яA-Za-z\s]+,\s*\d+/;
+      const addressRegex = /[А-Яа-яA-Za-z\s.,/]+\d+\/\d*,\s*[А-Яа-яA-Za-z\s]+,\s*\d+/;
 
-      const coordMatch = text.match(coordRegex);
-      const addressMatch = text.match(addressRegex);
+      const coordMatch = cleanedText.match(coordRegex);
+      const addressMatch = cleanedText.match(addressRegex);
 
       if (coordMatch) {
         const lat = coordMatch[1].replace(',', '.');
