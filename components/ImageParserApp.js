@@ -52,4 +52,19 @@ function ImageParserApp() {
       <h1 className="text-xl font-bold mb-2">Image Latitude, Longitude, and Address Parser</h1>
       <input type="file" onChange={handleImageUpload} className="mb-4" />
       {image && <img src={image} alt="Uploaded" className="mb-4 rounded" />}
-      <button onClick={parseCoordinates} className=
+      <button onClick={parseCoordinates} className="px-4 py-2 bg-blue-500 text-white rounded" disabled={processing}>
+        {processing ? 'Processing...' : 'Parse Coordinates'}
+      </button>
+      {coordinates.lat && coordinates.lon && (
+        <div className="mt-2">
+          <p>Latitude: {coordinates.lat}</p>
+          <p>Longitude: {coordinates.lon}</p>
+          <p>Altitude: {coordinates.alt}</p>
+          <p>Address: {coordinates.address}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ImageParserApp;
