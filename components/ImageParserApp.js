@@ -24,13 +24,12 @@ function ImageParserApp() {
       { logger: (m) => console.log(m) }
     ).then(({ data: { text } }) => {
       console.log('OCR Result:', text);
-      // Enhanced regex to match coordinates with or without separators
-      const regex = /\b(\d{2,3}[.,]?\d+)\b.*?\b(\d{2,3}[.,]?\d+)\b/;
-      const match = text.match(regex);
-      if (match) {
-        const lat = match[1].replace(',', '.');
-        const lon = match[2].replace(',', '.');
-        setCoordinates({ lat, lon });
+      // Improved regex to capture latitude and longitude pairs from noisy text
+      const regex = /([0-9]{2,3}[.,][0-9]{4,})[\s,;]*([0-9]{2,3}[.,][0-9]{4,})/g;
+      const matches = Array.from(text.matchAll(regex));
+      if (matches.length > 0) {
+        const [lat, lon] = matches[0].slice(1, 3);
+        setCoordinates({ lat: lat.replace(',', '.'), lon: lon.replace(',', '.') });
       } else {
         alert('Coordinates not found');
       }
