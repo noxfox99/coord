@@ -25,14 +25,14 @@ function ImageParserApp() {
     ).then(({ data: { text } }) => {
       console.log('OCR Result:', text);
 
-      // Updated regex to capture large integer pairs typical of coordinates
-      const regex = /\b(\d{5,8})[\s,;]+(\d{5,8})\b/g;
+      // Enhanced regex to capture both integer and decimal coordinate formats
+      const regex = /\b(-?\d{1,3}(?:[.,]\d+)?)[\s,;]+(-?\d{1,3}(?:[.,]\d+)?)\b/g;
       const matches = Array.from(text.matchAll(regex));
 
       let lat = '', lon = '';
       if (matches.length > 0) {
-        const num1 = matches[0][1];
-        const num2 = matches[0][2];
+        const num1 = matches[0][1].replace(',', '.');
+        const num2 = matches[0][2].replace(',', '.');
         lat = num1;
         lon = num2;
         setCoordinates({ lat, lon });
