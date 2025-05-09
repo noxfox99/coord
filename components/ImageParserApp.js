@@ -19,41 +19,42 @@ function ImageParserApp() {
     return text.replace(/[\n\r]+/g, ' ').replace(/[^\d.,A-Za-zА-Яа-я\s/()]+/g, '').trim();
   };
 
-  const parseCoordinates = () => {
-    if (!image) return;
-    setProcessing(true);
-    Tesseract.recognize(
-      image,
-      'rus+eng',
-      { logger: (m) => console.log(m) }
-    ).then(({ data: { text } }) => {
-      console.log('Raw OCR Result:', text);
+const parseCoordinates = () => {
+  if (!image) return;
+  setProcessing(true);
+  Tesseract.recognize(image, 'rus+eng', {
+    logger: (m) => console.log(m)
+  }).then(({ data: { text } }) => {
+    console.log('Raw OCR Result:', text);
 
-      // Clean the OCR text to reduce noise
-      const cleanedText = cleanOCRText(text);
-      console.log('Cleaned OCR Result:', cleanedText);
+    const cleanedText = cleanOCRText(text);
+    console.log('Cleaned OCR Result:', cleanedText);
 
-      const coordRegex = /(-?\d{1,3}[.,]\d+)[\s,;]+(-?\d{1,3}[.,]\d+)[^\d]*(\d+\s*m)/;
-      const addressRegex = /[А-Яа-яA-Za-z\s.,/]+\d+\/\d*,\s*[А-Яа-яA-Za-z\s]+,\s*\d+/;
+    const latLonRegex = /(-?\d{1,3}[.,]\d+)\s*[,;]\s*(-?\d{1,3}[.,]\d+)/;
+    const altRegex = /(?:высота|altitude)?\s*(\d+)\s*[мm]/i;
+    const addressRegex = /ул\.\s?[А-Яа-яA-Za-z0-9\s/]+,\s?[А-Яа-я\s]+,\s?\d{5,6}/;
 
-      const coordMatch = cleanedText.match(coordRegex);
-      const addressMatch = cleanedText.match(addressRegex);
+    const latLonMatch = cleanedText.match(latLonRegex);
+    const altMatch = cleanedText.match(altRegex);
+    const addressMatch = cleanedText.match(addressRegex);
 
-      if (coordMatch) {
-        const lat = coordMatch[1].replace(',', '.');
-        const lon = coordMatch[2].replace(',', '.');
-        const alt = coordMatch[3];
-        const address = addressMatch ? addressMatch[0] : 'Address not found';
-        setCoordinates({ lat, lon, alt, address });
-      } else {
-        alert('Coordinates not found');
-      }
-      setProcessing(false);
-    }).catch(() => {
-      alert('Error processing image');
-      setProcessing(false);
-    });
-  };
+    if (latLonMatch) {
+      const lat = latLonMatch[1].replace(',', '.');
+      const lon = latLonMatch[2].replace(',', '.');
+      const alt = altMatch ? `${altMatch[1]} m` : 'Not found';
+      const address = addressMatch ? addressMatch[0] : 'Address not found';
+
+      setCoordinates({ lat, lon, alt, address });
+    } else {
+      alert('Coordinates not found');
+    }
+    setProcessing(false);
+  }).catch(() => {
+    alert('Error processing image');
+    setProcessing(false);
+  });
+};
+
 
   return (
     <div className="p-4">
